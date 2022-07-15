@@ -1,3 +1,6 @@
+# Run this script to initiate a training sequence. Configuration of the training and desired output depend on
+# config.yaml, so make sure that is correct before execution.
+
 from src.utils import get_configs
 from src.visualization import plots as plot
 import matplotlib.pyplot as plt
@@ -7,7 +10,7 @@ import json
 def main(cfg):
     model_name = cfg['training']['model']
 
-    # temporary -- error out if doesn't exist
+    # temporary -- error out if doesn't exist (yet)
     if model_name != 'GrIS_HybridFlow':
         raise NotImplementedError(f'{model_name} either does not exist or is not supported yet.')
     if model_name == 'GrIS_HybridFlow' and cfg['model']['conditional']:
@@ -19,11 +22,9 @@ def main(cfg):
         data, metrics = train_GrIS_HF(cfg)
 
         if cfg['training']['save_metrics']:
-            metrics_save_path = "./results/metrics.json"
-            with open(metrics_save_path, "w") as outfile:
-                json.dump(metrics, outfile)
-                print('')
-            print(f'Metrics saved to: {metrics_save_path}')
+            save_metrics(metrics)
+            print('')
+            print(f'Metrics saved to: \"./results/metrics.json\"')
         print(metrics)
 
     print('')
@@ -32,6 +33,12 @@ def main(cfg):
 
     print('')
     print('Done!')
+
+
+def save_metrics(metrics):
+    metrics_save_path = "./results/metrics.json"
+    with open(metrics_save_path, "w") as outfile:
+        json.dump(metrics, outfile)
 
 
 def make_plots(cfg, data):

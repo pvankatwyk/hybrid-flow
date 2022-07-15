@@ -40,17 +40,25 @@ def train_GrIS_HF(cfg):
             x = torch.tensor(X_train[i:i + batch_size, :], dtype=torch.float32)
             y = torch.tensor(y_train[i:i + batch_size], dtype=torch.float32).reshape(-1, 1)
 
-            # Train FLOW
+            # Train model
             optimizer.zero_grad()
+
+            # Generative loss
             neg_log_prob = -HybridFlow.Flow.flow.log_prob(inputs=x).mean()
+
+            # Predictor Loss
             pred, uq = HybridFlow(x)
             pred_loss = predictor_loss(pred, y)
+
+            # Cumulative loss (loss = scaling_constant * neg_log_prob + pred_loss)
             loss = torch.add(pred_loss, neg_log_prob, alpha=scaling_constant)
-            # loss = scaling_constant * neg_log_prob + pred_loss
             loss.backward()
+
+            # Keep track of metrics
             loss_list.append(loss.detach().numpy())
             flow_loss_list.append(neg_log_prob.detach().numpy())
             predictor_loss_list.append(pred_loss.detach().numpy())
+
             optimizer.step()
 
             if verbose and i % 2000 == 0:
@@ -66,16 +74,19 @@ def train_GrIS_HF(cfg):
         plt.legend()
         plt.show()
 
+    # Test predictions
     with torch.no_grad():
         predictions, uncertainties = HybridFlow(torch.tensor(X_test, dtype=torch.float32))
 
     predictions = predictions.numpy().squeeze()
     uncertainties = uncertainties.numpy().squeeze()
 
+    # Calculate metrics
     mae = mean_absolute_error(y_true=y_test, y_pred=predictions)
     pred_loss = mean_squared_error(y_true=y_test, y_pred=predictions, squared=True)
     rmse = mean_squared_error(y_true=y_test, y_pred=predictions, squared=False)
 
+    # Format outputs
     data = {'X_test': X_test, 'y_test': y_test, 'predictions': predictions, 'uncertainties': uncertainties}
     metrics = {f'Test Loss ({predictor_loss})': pred_loss, 'MAE': mae, 'RMSE': rmse}
 
