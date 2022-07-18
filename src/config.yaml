@@ -1,6 +1,6 @@
 training:
-  model: GrIS_HybridFlow
-  epochs: 25
+  model: GrIS_HybridFlow   # GrIS_HybridFlow, Glacier_HybridFlow
+  epochs: 5
   batch_size: 250
   generative_scaling_constant: 0.8
   test_split_ratio: 0.05
@@ -12,13 +12,12 @@ data:
   dir: C:/Users/Peter/Documents/Research/data/proj_MAIN_2100
   ssp: all              # all, ssp370, ssp245, ssp126, ssp119, ssp585, sspndc
   ice_source: gris      # gris, glaciers, ais
-  region: None
+  region: 5
 
 model:
   flow:
     num_flow_transformations: 5
     hidden_features: 128
-  conditional: False
 
 visualizations:
   generate_plots:      # prediction_uncertainty, residuals_histogram, cross_validation_plots

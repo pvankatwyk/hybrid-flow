@@ -1,5 +1,4 @@
 import yaml
-import numpy as np
 
 
 def get_configs():

@@ -31,8 +31,15 @@ def prediction_uncertainty(inputs, predictions, true_values, uncertainties, layo
     normalized_uncertainties = (uncertainties - min(uncertainties)) / (max(uncertainties) - min(uncertainties))
 
     if layout == 'overlay':
-        plt.scatter(inputs[:, 0], true_values, c='red', s=3, label='Simulations')
-        plt.scatter(inputs[:, 0], predictions, c=normalized_uncertainties, marker='+', label='Prediction & Uncertainty')
+        try:
+            plt.scatter(inputs[:, 0], true_values, c='red', s=3, label='Simulations')
+            plt.scatter(inputs[:, 0], predictions, c=normalized_uncertainties, marker='+',
+                        label='Prediction & Uncertainty')
+        except IndexError:
+            plt.scatter(inputs, true_values, c='red', s=3, label='Simulations')
+            plt.scatter(inputs, predictions, c=normalized_uncertainties, marker='+',
+                        label='Prediction & Uncertainty')
+
         plt.title('Simulation vs HybridFlow Emulation')
         plt.xlabel('Global mean air temperature')
         plt.ylabel('Sea level contribution (cm)')
@@ -42,10 +49,16 @@ def prediction_uncertainty(inputs, predictions, true_values, uncertainties, layo
     if layout == 'side-by-side':
         fig, (ax1, ax2) = plt.subplots(1, 2, sharey=True, sharex=True, figsize=(10, 5))
         fig.suptitle('GCM Simulation vs HybridFlow Emulation')
-        ax1.scatter(inputs[:, 0], true_values, c='red', s=3, label='Simulations')
+        try:  # (2D+ inputs)
+            ax1.scatter(inputs[:, 0], true_values, c='red', s=3, label='Simulations')
+            c = ax2.scatter(inputs[:, 0], predictions, c=normalized_uncertainties, marker='+',
+                            label='Prediction & Uncertainty')
+        except IndexError:  # (1D input)
+            ax1.scatter(inputs, true_values, c='red', s=3, label='Simulations')
+            c = ax2.scatter(inputs, predictions, c=normalized_uncertainties, marker='+',
+                            label='Prediction & Uncertainty')
+
         ax1.set_title("GCM Simulations")
-        c = ax2.scatter(inputs[:, 0], predictions, c=normalized_uncertainties, marker='+',
-                        label='Prediction & Uncertainty')
         ax2.set_title("HybridFlow")
         plt.tight_layout()
         fig.subplots_adjust(right=0.9)
@@ -55,10 +68,16 @@ def prediction_uncertainty(inputs, predictions, true_values, uncertainties, layo
     if layout == 'side-by-side hist':
         fig, (ax1, ax2) = plt.subplots(1, 2, sharey=True, sharex=True, figsize=(10, 5))
         fig.suptitle('GCM Simulation vs HybridFlow Emulation')
-        ax1.hist2d(inputs[:, 0], true_values, bins=(30, 30))
+        try:
+            ax1.hist2d(inputs[:, 0], true_values, bins=(30, 30))
+            c = ax2.scatter(inputs[:, 0], predictions, c=normalized_uncertainties, marker='+',
+                            label='Prediction & Uncertainty')
+        except IndexError:
+            ax1.hist2d(inputs, true_values, bins=(30, 30))
+            c = ax2.scatter(inputs, predictions, c=normalized_uncertainties, marker='+',
+                            label='Prediction & Uncertainty')
+
         ax1.set_title("GCM Simulations")
-        c = ax2.scatter(inputs[:, 0], predictions, c=normalized_uncertainties, marker='+',
-                        label='Prediction & Uncertainty')
         ax2.set_title("HybridFlow")
         plt.tight_layout()
         fig.subplots_adjust(right=0.9)

@@ -1,4 +1,4 @@
-from src.models.GrIS_HybridFlow import GIS_HybridFlow
+from src.models.Glacier_HybridFlow import Glacier_HybridFlow
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 import matplotlib.pyplot as plt
@@ -7,11 +7,9 @@ from torch import nn, optim
 from src.data.FAIR import get_FAIR_data
 
 
-def train_GrIS_HF(cfg):
+def train_Glacier_HF(cfg):
     num_epochs = cfg['training']['epochs']
     verbose = cfg['training']['verbose']
-    ssp = cfg['data']['ssp']
-    region = cfg['training']['epochs']
     batch_size = cfg['training']['batch_size']
 
     # Data
@@ -19,12 +17,12 @@ def train_GrIS_HF(cfg):
         dir=cfg['data']['dir'],
         ice_source=cfg['data']['ice_source'],
         ssp=cfg['data']['ssp'],
-        region=cfg['data']['ice_source'],
+        region=cfg['data']['region'],
     )
     X_train, X_test, y_train, y_test = train_test_split(inputs, labels, test_size=cfg['training']['test_split_ratio'], )
 
     # setup optimizers and losses
-    HybridFlow = GIS_HybridFlow()
+    HybridFlow = Glacier_HybridFlow()
     optimizer = optim.Adam(list(HybridFlow.Flow.parameters()) + list(HybridFlow.Predictor.parameters()))
     predictor_loss = nn.MSELoss()
     scaling_constant = cfg['training']['generative_scaling_constant']
@@ -37,7 +35,7 @@ def train_GrIS_HF(cfg):
             print(f'---------- EPOCH: {epoch} ----------')
 
         for i in range(0, len(inputs), batch_size):
-            x = torch.tensor(X_train[i:i + batch_size, :], dtype=torch.float32)
+            x = torch.tensor(X_train[i:i + batch_size], dtype=torch.float32).reshape(-1, 1)
             y = torch.tensor(y_train[i:i + batch_size], dtype=torch.float32).reshape(-1, 1)
 
             # Train model
@@ -68,7 +66,7 @@ def train_GrIS_HF(cfg):
         plt.plot(loss_list, 'r-', label='Total Loss')
         plt.plot(flow_loss_list, 'b-', label='Flow Loss')
         plt.plot(predictor_loss_list, 'g-', label='Predictor Loss')
-        plt.title('GIS_HybridFlow Loss per Batch')
+        plt.title('GrIS_HybridFlow Loss per Batch')
         plt.xlabel(f'Batch # ({batch_size} per batch)')
         plt.ylabel('Loss')
         plt.legend()

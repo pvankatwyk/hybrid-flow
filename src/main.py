@@ -5,38 +5,49 @@ from src.utils import get_configs
 from src.visualization import plots as plot
 import matplotlib.pyplot as plt
 import json
+from src.training.Trainer import Trainer
+import time
 
 
 def main(cfg):
-    model_name = cfg['training']['model']
+    times = {'start': time.time()}
 
-    # temporary -- error out if doesn't exist (yet)
-    if model_name != 'GrIS_HybridFlow':
-        raise NotImplementedError(f'{model_name} either does not exist or is not supported yet.')
-    if model_name == 'GrIS_HybridFlow' and cfg['model']['conditional']:
-        raise NotImplementedError('Conditional GrIS_HybridFlow not supported yet.')
+    # Train the model while keeping track of times
+    print('Training...')
+    trainer = Trainer(cfg)
+    trainer = trainer.load_data()
+    times['training_start'] = time.time()
+    trainer = trainer.train()
+    times['training_end'] = time.time()
+    data, metrics = trainer.evaluate()
+    times['evaluation_end'] = time.time()
 
-    if model_name == 'GrIS_HybridFlow':
-        from src.training.train_GrIS_HF import train_GrIS_HF
-        print('Training...')
-        data, metrics = train_GrIS_HF(cfg)
+    if cfg['training']['plot_loss']:
+        trainer.plot_loss()
 
-        if cfg['training']['save_metrics']:
-            save_metrics(metrics)
-            print('')
-            print(f'Metrics saved to: \"./results/metrics.json\"')
-        print(metrics)
+    if cfg['training']['save_metrics']:
+        save_metrics(metrics, model=cfg['training']['model'])
+        print('')
+        print(f'Metrics saved to: \"./results/metrics_{cfg["training"]["model"]}.json\"')
+    print(metrics)
 
+    # Make plots listed in config
     print('')
     print('Generating Plots...')
     make_plots(cfg, data)
 
+    times['end'] = time.time()
+
     print('')
     print('Done!')
+    print(f"""__ Runtimes __ 
+Total Time: {round(times['end'] - times['start'], 6)} seconds
+Training Time: {round(times['training_end'] - times['training_start'], 6)} seconds
+Evaluation Time: {round(times['evaluation_end'] - times['training_end'], 6)} seconds""")
 
 
-def save_metrics(metrics):
-    metrics_save_path = "./results/metrics.json"
+def save_metrics(metrics, model):
+    metrics_save_path = f"./results/metrics_{model}.json"
     with open(metrics_save_path, "w") as outfile:
         json.dump(metrics, outfile)
 
@@ -99,3 +110,5 @@ def make_plots(cfg, data):
 if __name__ == '__main__':
     cfg = get_configs()
     main(cfg)
+
+    # TODO: Implement export-model boolean config with filetype config
