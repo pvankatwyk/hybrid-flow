@@ -12,7 +12,7 @@ class FlowNetwork(nn.Module):
         super(FlowNetwork, self).__init__()
         self.num_flow_transforms = cfg['model']['flow']['num_flow_transformations']
         self.flow_hidden_features = cfg['model']['flow']['num_flow_transformations']
-        self.num_input_features = 2
+        self.num_input_features = 3
 
         # Set up flow
         self.base_dist = distributions.normal.StandardNormal(
@@ -48,9 +48,10 @@ class PredictorNetwork(nn.Module):
     def __init__(self):
         super(PredictorNetwork, self).__init__()
 
-        self.input = nn.Linear(2, 256)
-        self.linear1 = nn.Linear(256, 128, bias=True)
-        self.linear2 = nn.Linear(128, 64, bias=True)
+        self.input = nn.Linear(3, 512)
+        self.linear1 = nn.Linear(512, 256, bias=True)
+        self.linear2 = nn.Linear(256, 128, bias=True)
+        self.linear3 = nn.Linear(128, 64, bias=True)
         self.linear_out = nn.Linear(64, 1, bias=True)
         self.dropout = nn.Dropout(p=0.1)
         self.relu = nn.ReLU()
@@ -62,14 +63,15 @@ class PredictorNetwork(nn.Module):
         x = self.relu(x)
         x = self.dropout(x)
         x = self.linear2(x)
-        # x = self.relu(x)
+        x = self.relu(x)
+        x = self.linear3(x)
         x = self.linear_out(x)
         return x
 
 
-class GrIS_HybridFlow(nn.Module):
+class AIS_HybridFlow(nn.Module):
     def __init__(self, ):
-        super(GrIS_HybridFlow, self).__init__()
+        super(AIS_HybridFlow, self).__init__()
         self.Predictor = PredictorNetwork()
         self.Flow = FlowNetwork()
 

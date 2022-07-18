@@ -40,6 +40,8 @@ def get_FAIR_data(dir=f'../data/', ice_source='gris', ssp='all', region=None):
         y = np.array(data.SLE)
 
     if ice_source == "ais":
+        if region is not None and region != 'all':
+            data = data[data.region == str(region)]
         x = np.zeros((len(data), 3))
         x[:, 0] = np.array(data.GSAT)
         x[:, 1] = np.array(data['melt'])

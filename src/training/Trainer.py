@@ -47,12 +47,15 @@ class Trainer:
         elif self.model_name == 'Glacier_HybridFlow':
             from src.models.Glacier_HybridFlow import Glacier_HybridFlow
             self.HybridFlow = Glacier_HybridFlow()
+        elif self.model_name == 'AIS_HybridFlow':
+            from src.models.AIS_HybridFlow import AIS_HybridFlow
+            self.HybridFlow = AIS_HybridFlow()
         else:
             raise NameError(f'Model: {self.model_name} either does not exist or is not supported yet.')
 
         self.num_input_features = self.HybridFlow.Flow.num_input_features
         optimizer = optim.Adam(list(self.HybridFlow.Flow.parameters()) + list(self.HybridFlow.Predictor.parameters()))
-        predictor_loss = nn.MSELoss()
+        predictor_loss = nn.L1Loss()
         scaling_constant = self.cfg['training']['generative_scaling_constant']
 
         for epoch in range(self.num_epochs):
@@ -104,6 +107,7 @@ class Trainer:
 
     def evaluate(self):
         # Test predictions
+        self.HybridFlow.eval()
 
         if self.num_input_features == 1:
             X_test = torch.tensor(self.data['X_test'], dtype=torch.float32).reshape(-1, 1)
