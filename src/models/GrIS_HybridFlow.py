@@ -62,7 +62,7 @@ class PredictorNetwork(nn.Module):
         x = self.relu(x)
         x = self.dropout(x)
         x = self.linear2(x)
-        # x = self.relu(x)
+        x = self.relu(x)
         x = self.linear_out(x)
         return x
 

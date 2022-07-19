@@ -47,8 +47,8 @@ class PredictorNetwork(nn.Module):
 
         self.input = nn.Linear(1, 64)
         self.linear1 = nn.Linear(64, 32, bias=True)
-        self.linear_out = nn.Linear(32, 1, bias=True)
-        self.dropout = nn.Dropout(p=0.1)
+        self.linear_out = nn.Linear(32, 1)
+        # self.dropout = nn.Dropout(p=0.1)
         self.relu = nn.ReLU()
 
     def forward(self, x):
@@ -56,7 +56,7 @@ class PredictorNetwork(nn.Module):
         x = self.relu(x)
         x = self.linear1(x)
         x = self.relu(x)
-        x = self.dropout(x)
+        # x = self.dropout(x)
         x = self.linear_out(x)
         return x
 

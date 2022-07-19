@@ -34,6 +34,21 @@ class Trainer:
 
         return self
 
+    def calc_predictor_losses(self, pred, y, aggregate_fxn='add'):
+        # Use if composite loss (e.g. MSE + L1)
+        losses = self.losses
+        total_loss = 0
+
+        for loss in losses.keys():
+            if aggregate_fxn in ('add', 'average'):
+                total_loss += losses[loss](pred, y)
+
+        if aggregate_fxn == 'average':
+            total_loss /= len(losses.keys())
+
+        return total_loss
+
+
     def train(self):
 
         # Load data if it hasn't been loaded already
@@ -55,7 +70,7 @@ class Trainer:
 
         self.num_input_features = self.HybridFlow.Flow.num_input_features
         optimizer = optim.Adam(list(self.HybridFlow.Flow.parameters()) + list(self.HybridFlow.Predictor.parameters()))
-        predictor_loss = nn.L1Loss()
+        self.losses = {'mse': nn.MSELoss(), 'mae': nn.L1Loss()}
         scaling_constant = self.cfg['training']['generative_scaling_constant']
 
         for epoch in range(self.num_epochs):
@@ -77,7 +92,7 @@ class Trainer:
 
                 # Predictor Loss
                 pred, uq = self.HybridFlow(x)
-                pred_loss = predictor_loss(pred, y)
+                pred_loss = self.calc_predictor_losses(pred, y, aggregate_fxn='add')
 
                 # Cumulative loss (loss = scaling_constant * neg_log_prob + pred_loss)
                 loss = torch.add(pred_loss, neg_log_prob, alpha=scaling_constant)
@@ -90,7 +105,7 @@ class Trainer:
 
                 optimizer.step()
 
-                if self.verbose and i % 2000 == 0:
+                if self.verbose and i % 500 == 0:
                     print(f"Total Loss: {loss}, -Log Prob: {neg_log_prob}, MSE: {pred_loss}")
 
         return self

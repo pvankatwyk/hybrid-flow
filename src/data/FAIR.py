@@ -25,7 +25,7 @@ def get_FAIR_data(dir=f'../data/', ice_source='gris', ssp='all', region=None):
     data = load_all_data(dir=dir)
     data = data[data['ice_source'] == ice_source]
     if ssp != 'all':
-        data = data[data.ssp == ssp]
+        data = data[data.ssp == ssp.upper()]
     if ice_source == "glaciers":
         if region is not None:
             data = data[data.region == 'region_' + str(region)]

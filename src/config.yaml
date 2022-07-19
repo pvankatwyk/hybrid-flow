@@ -1,18 +1,18 @@
 training:
-  model: AIS_HybridFlow   # GrIS_HybridFlow, Glacier_HybridFlow, AIS_HybridFlow
-  epochs: 10
-  batch_size: 250
-  generative_scaling_constant: 0.6
+  model: GrIS_HybridFlow   # GrIS_HybridFlow, Glacier_HybridFlow, AIS_HybridFlow
+  epochs: 25
+  batch_size: 50
+  generative_scaling_constant: 0.8
   test_split_ratio: 0.1
   verbose: True
   plot_loss: True
-  save_metrics: True
+  save_metrics: False
 
 data:
   dir: C:/Users/Peter/Documents/Research/data/proj_MAIN_2100
-  ssp: all              # all, ssp370, ssp245, ssp126, ssp119, ssp585, sspndc
-  ice_source: ais      # gris, glaciers, ais
-  region: WAIS        # Numeric for glaciers, WAIS, EAIS, PEN for AIS, None for GrIS
+  ssp: ssp585          # all, ssp370, ssp245, ssp126, ssp119, ssp585, sspndc
+  ice_source: gris      # gris, glaciers, ais
+  region: None       # Numeric for glaciers, WAIS, EAIS, PEN for AIS, None for GrIS
 
 model:
   flow:
