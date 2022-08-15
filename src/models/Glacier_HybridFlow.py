@@ -3,12 +3,17 @@ from nflows import distributions, flows, transforms
 from src.utils import get_configs
 cfg = get_configs()
 
+if cfg['data']['ssp_as_feature'] is True:
+    num_input_features = 7
+else:
+    num_input_features = 1
+
 class FlowNetwork(nn.Module):
     def __init__(self,):
         super(FlowNetwork, self).__init__()
         self.num_flow_transforms = cfg['model']['flow']['num_flow_transformations']
         self.flow_hidden_features = cfg['model']['flow']['num_flow_transformations']
-        self.num_input_features = 1
+        self.num_input_features = num_input_features
 
 
         # Set up flow
@@ -45,7 +50,7 @@ class PredictorNetwork(nn.Module):
     def __init__(self):
         super(PredictorNetwork, self).__init__()
 
-        self.input = nn.Linear(1, 64)
+        self.input = nn.Linear(num_input_features, 64)
         self.linear1 = nn.Linear(64, 32, bias=True)
         self.linear_out = nn.Linear(32, 1)
         # self.dropout = nn.Dropout(p=0.1)

@@ -10,6 +10,7 @@ class Trainer:
     def __init__(self, cfg):
         self.HybridFlow = None
         self.data = {}
+        self.losses = {}
         self.cfg = cfg
         self.model_name = cfg['training']['model']
         self.num_epochs = cfg['training']['epochs']
@@ -24,6 +25,7 @@ class Trainer:
             ice_source=self.cfg['data']['ice_source'],
             ssp=self.cfg['data']['ssp'],
             region=self.cfg['data']['region'],
+            ssp_as_feature=self.cfg['data']['ssp_as_feature'],
         )
         X_train, X_test, y_train, y_test = train_test_split(inputs, labels,
                                                             test_size=self.cfg['training']['test_split_ratio'], )
@@ -48,9 +50,7 @@ class Trainer:
 
         return total_loss
 
-
     def train(self):
-
         # Load data if it hasn't been loaded already
         if len(self.data) == 0:
             self.load_data()
@@ -105,16 +105,18 @@ class Trainer:
 
                 optimizer.step()
 
-                if self.verbose and i % 500 == 0:
-                    print(f"Total Loss: {loss}, -Log Prob: {neg_log_prob}, MSE: {pred_loss}")
+                message_freq = round(len(self.data['X_train']) // 5, -3)  # 5 prints per epoch
+                if self.verbose and i % message_freq == 0:
+                    print(f"Total Loss: {loss}, Generator Loss: {neg_log_prob}, Predictor Loss: {pred_loss}")
 
         return self
 
     def plot_loss(self):
+        model_name = self.cfg['training']['model']
         plt.plot(self.loss_logs['total_loss'], 'r-', label='Total Loss')
         plt.plot(self.loss_logs['flow_loss'], 'b-', label='Flow Loss')
         plt.plot(self.loss_logs['predictor_loss'], 'g-', label='Predictor Loss')
-        plt.title('GrIS_HybridFlow Loss per Batch')
+        plt.title(f'{model_name} Loss per Batch')
         plt.xlabel(f'Batch # ({self.batch_size} per batch)')
         plt.ylabel('Loss')
         plt.legend()
@@ -132,17 +134,24 @@ class Trainer:
         with torch.no_grad():
             predictions, uncertainties = self.HybridFlow(X_test)
 
+        test_loss = self.calc_predictor_losses(
+            torch.tensor(predictions),
+            torch.tensor(self.data['y_test'].reshape(-1,1)),
+            aggregate_fxn='add'
+        )
+
         predictions = predictions.numpy().squeeze()
         uncertainties = uncertainties.numpy().squeeze()
 
+
         # Calculate metrics
         mae = mean_absolute_error(y_true=self.data['y_test'], y_pred=predictions)
-        pred_loss = mean_squared_error(y_true=self.data['y_test'], y_pred=predictions, squared=True)
+        mse = mean_squared_error(y_true=self.data['y_test'], y_pred=predictions, squared=True)
         rmse = mean_squared_error(y_true=self.data['y_test'], y_pred=predictions, squared=False)
 
         # Format outputs
         data = {'X_test': self.data['X_test'], 'y_test': self.data['y_test'], 'predictions': predictions,
                 'uncertainties': uncertainties}
-        metrics = {f'Test Loss ({self.loss_logs["total_loss"][-1]})': pred_loss, 'MAE': mae, 'RMSE': rmse}
+        metrics = {f'Test Loss ({self.losses})': test_loss, 'MSE': mse, 'MAE': mae, 'RMSE': rmse}
 
         return data, metrics
